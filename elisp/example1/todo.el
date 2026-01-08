@@ -44,7 +44,7 @@
       (let ((prefix (match-string 1 line))
             (suffix (match-string 2 line)))
         (delete-line)
-        (insert (format "%s TASK(%s):%s\n" prefix (tasks-new-huid) suffix)))
+        (insert (format "%s TASK(%s): %s\n" prefix (tasks-new-huid) suffix)))
       )
     )
   )
@@ -53,8 +53,8 @@
   (interactive)
   (let ((line (thing-at-point 'line)))
     (when (string-match "\\(.*\\)TODO:\\(.*\\)" line)
-      (let ((prefix (string-trim (match-string 1 line)))
-            (suffix (match-string 2 line)))
+      (let ((prefix (match-string 1 line))
+            (suffix (string-trim (match-string 2 line))))
         (message "found TODO: %s" suffix)
         (let ((db-dir (tasks-find-database)))
           (message "found db-dir: %s" db-dir)
@@ -64,7 +64,10 @@
               (if (file-exists-p task-path)
                   (message "ERROR: %s already exists. Trying again later." task-path)
                 (mkdir task-path)
-                (let ((task-string (format "# %s\n" suffix))
+                (let ((task-string (format (concat  "# %s\n"
+                                                    "\n"
+                                                    "- STATUS: OPEN\n"
+                                                    "- PRIORITY: 50\n") suffix))
                       (task-md-path (file-name-concat task-path "TASK.md")))
                   (write-region task-string nil task-md-path)
                   (delete-line)
