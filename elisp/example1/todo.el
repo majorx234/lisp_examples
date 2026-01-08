@@ -7,7 +7,7 @@
       (message "%s" dir)
       (setq dir (file-name-parent-directory dir)))))
 
-(defun tasks-find-database ()
+(defun tasks-find-database0 ()
   (let ((dir default-directory)
         (result nil))
     (while (and dir (not result))
@@ -19,6 +19,16 @@
       ) result
     )
   )
+
+(defun task-find-database ()
+  (let ((dir default-directory))
+    (catch 'result
+      (while dir
+        (let ((db-dir (file-name-concat dir "tasks")))
+          (if (file-directory-p db-dir)
+              (throw 'result db-dir)
+            (setq dir (file-name-parent-directory dir))))))))
+
 (tasks-find-database)
 
 (defun tasks-create-from-todo0 ()
@@ -39,3 +49,4 @@
       )
     )
   )
+
