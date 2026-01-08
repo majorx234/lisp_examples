@@ -20,7 +20,7 @@
     )
   )
 
-(defun task-find-database ()
+(defun tasks-find-database ()
   (let ((dir default-directory))
     (catch 'result
       (while dir
@@ -29,7 +29,6 @@
               (throw 'result db-dir)
             (setq dir (file-name-parent-directory dir))))))))
 
-(tasks-find-database)
 
 (defun tasks-create-from-todo0 ()
   (let ((line (thing-at-point 'line)))
@@ -45,8 +44,32 @@
       (let ((prefix (match-string 1 line))
             (suffix (match-string 2 line)))
         (delete-line)
-        (insert (format "%sTASK(%s):%s\n" prefix (tasks-new-huid) suffix)))
+        (insert (format "%s TASK(%s):%s\n" prefix (tasks-new-huid) suffix)))
       )
     )
   )
 
+(defun tasks-create-from-todo ()
+  (interactive)
+  (let ((line (thing-at-point 'line)))
+    (when (string-match "\\(.*\\)TODO:\\(.*\\)" line)
+      (let ((prefix (string-trim (match-string 1 line)))
+            (suffix (match-string 2 line)))
+        (message "found TODO: %s" suffix)
+        (let ((db-dir (tasks-find-database)))
+          (message "found db-dir: %s" db-dir)
+          (when db-dir
+            (let* ((huid (tasks-new-huid))
+                   (task-path (file-name-concat db-dir huid)))
+              (if (file-exists-p task-path)
+                  (message "ERROR: %s already exists. Trying again later." task-path)
+                (mkdir task-path)
+                (let ((task-string (format "# %s\n" suffix))
+                      (task-md-path (file-name-concat task-path "TASK.md")))
+                  (write-region task-string nil task-md-path)
+                  (delete-line)
+                  (insert (format "%sTask(%s):%s\n" prefix huid suffix))
+                  (find-file-other-window task-md-path))
+                ))))))
+      )
+  )
